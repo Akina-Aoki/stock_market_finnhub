@@ -1,7 +1,11 @@
+# Airflow runtime logs
+logs/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
 *$py.class
+*.pyc
 
 # C extensions
 *.so
@@ -156,6 +160,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.venv_stock/
 
 # Spyder project settings
 .spyderproject

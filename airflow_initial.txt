@@ -1,0 +1,5 @@
+docker compose exec airflow-scheduler airflow db init
+
+docker compose run airflow-webserver airflow db migrate
+
+docker compose exec airflow-webserver airflow users create --username <<USER_NAME>> --firstname <<FIRST_NAME>> --lastname <<LAST_NAME>> --role Admin --email <<EMAIL>> --password password123
