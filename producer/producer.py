@@ -6,10 +6,12 @@ from datetime import datetime, timezone
 import requests
 from dotenv import load_dotenv
 from kafka import KafkaProducer
+from kafka.errors import KafkaError, KafkaTimeoutError
 
 
 # Load environment variables from .env
 load_dotenv()
+
 
 # Finnhub API configuration
 API_KEY = os.getenv("FINNHUB_API_KEY")
@@ -18,7 +20,10 @@ BASE_URL = "https://finnhub.io/api/v1/quote"
 # Keep MVP small to avoid API/rate-limit problems
 SYMBOLS = ["AAPL", "MSFT", "TSLA", "GOOGL", "AMZN"]
 
+
 # Kafka configuration
+# Use localhost:29092 when running producer.py from your Windows/Git Bash terminal.
+# Use kafka:9092 only when running Python inside another Docker container.
 KAFKA_BOOTSTRAP_SERVERS = os.getenv(
     "KAFKA_BOOTSTRAP_SERVERS",
     "localhost:29092"
@@ -31,10 +36,22 @@ if not API_KEY:
     raise ValueError("FINNHUB_API_KEY is missing. Add it to your .env file.")
 
 
-producer = KafkaProducer(
-    bootstrap_servers=[KAFKA_BOOTSTRAP_SERVERS],
-    value_serializer=lambda value: json.dumps(value).encode("utf-8"),
-)
+def create_producer() -> KafkaProducer:
+    """Create and return a Kafka producer."""
+    try:
+        producer = KafkaProducer(
+            bootstrap_servers=[KAFKA_BOOTSTRAP_SERVERS],
+            value_serializer=lambda value: json.dumps(value).encode("utf-8"),
+            retries=3,
+            request_timeout_ms=30000,
+            max_block_ms=30000,
+        )
+
+        print(f"Connected producer to Kafka bootstrap server: {KAFKA_BOOTSTRAP_SERVERS}")
+        return producer
+
+    except KafkaError as error:
+        raise RuntimeError(f"Failed to create Kafka producer: {error}") from error
 
 
 def fetch_quote(symbol: str) -> dict | None:
@@ -70,20 +87,60 @@ def fetch_quote(symbol: str) -> dict | None:
         return None
 
 
+def send_quote(producer: KafkaProducer, quote: dict) -> None:
+    """Send one quote message to Kafka."""
+    try:
+        future = producer.send(KAFKA_TOPIC, value=quote)
+
+        # Wait for Kafka acknowledgement.
+        record_metadata = future.get(timeout=30)
+
+        print(
+            "Sent message to Kafka | "
+            f"topic={record_metadata.topic}, "
+            f"partition={record_metadata.partition}, "
+            f"offset={record_metadata.offset}, "
+            f"symbol={quote['symbol']}"
+        )
+
+    except KafkaTimeoutError as error:
+        print(
+            "Kafka timeout error. The producer could not fetch Kafka metadata. "
+            "Check that Docker is running and that KAFKA_BOOTSTRAP_SERVERS=localhost:29092."
+        )
+        raise error
+
+    except KafkaError as error:
+        print(f"Kafka error while sending message: {error}")
+        raise error
+
+
 def main() -> None:
     """Continuously fetch stock quotes and publish them to Kafka."""
     print(f"Starting producer. Sending messages to Kafka topic: {KAFKA_TOPIC}")
 
-    while True:
-        for symbol in SYMBOLS:
-            quote = fetch_quote(symbol)
+    producer = create_producer()
 
-            if quote:
-                print(f"Producing: {quote}")
-                producer.send(KAFKA_TOPIC, value=quote)
+    try:
+        while True:
+            for symbol in SYMBOLS:
+                quote = fetch_quote(symbol)
 
+                if quote:
+                    print(f"Producing: {quote}")
+                    send_quote(producer, quote)
+
+            producer.flush()
+            print("Batch completed. Sleeping for 30 seconds...\n")
+            time.sleep(30)
+
+    except KeyboardInterrupt:
+        print("Producer stopped manually.")
+
+    finally:
         producer.flush()
-        time.sleep(30)
+        producer.close()
+        print("Kafka producer closed.")
 
 
 if __name__ == "__main__":
