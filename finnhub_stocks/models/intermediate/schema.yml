@@ -1,0 +1,94 @@
+# dbt uses this file for:
+# - model descriptions
+# - column descriptions
+# - data tests
+# - dbt docs
+
+
+version: 2
+
+models:
+  - name: int_stock_quote_metrics
+    description: >
+      Intermediate model for Finnhub stock quotes. This model uses the cleaned
+      staging data and adds simple stock-related calculations, such as daily
+      price range, price movement direction, and the quote fetch date/hour.
+
+    columns:
+      - name: symbol
+        description: Stock ticker symbol, such as AAPL, MSFT, TSLA, GOOGL, or AMZN.
+        data_tests:
+          - not_null
+
+      - name: current_price
+        description: Current stock price from Finnhub.
+        data_tests:
+          - not_null
+
+      - name: price_change
+        description: Price change compared to the previous closing price. This can be positive, negative, or zero.
+        data_tests:
+          - not_null
+
+      - name: price_change_percent
+        description: Percentage price change compared to the previous closing price. This can be positive, negative, or zero.
+        data_tests:
+          - not_null
+
+      - name: high_price
+        description: Highest stock price during the trading day.
+        data_tests:
+          - not_null
+
+      - name: low_price
+        description: Lowest stock price during the trading day.
+        data_tests:
+          - not_null
+
+      - name: open_price
+        description: Opening stock price for the trading day.
+        data_tests:
+          - not_null
+
+      - name: previous_close_price
+        description: Previous closing stock price.
+        data_tests:
+          - not_null
+
+      - name: fetched_at
+        description: Timestamp when the Python producer fetched the quote from the Finnhub API.
+        data_tests:
+          - not_null
+
+      - name: fetched_date
+        description: Date extracted from fetched_at. Useful for daily grouping.
+        data_tests:
+          - not_null
+
+      - name: fetched_hour
+        description: Hour extracted from fetched_at. Useful for hourly grouping.
+        data_tests:
+          - not_null
+
+      - name: daily_price_range
+        description: Difference between the daily high price and low price.
+        data_tests:
+          - not_null
+
+      - name: daily_price_range_percent
+        description: Daily high-low price range as a percentage of the previous closing price.
+        data_tests:
+          - not_null
+
+      - name: price_movement_direction
+        description: Simple movement label based on price_change. Possible values are up, down, or unchanged.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['up', 'down', 'unchanged']
+
+      - name: price_position_in_daily_range
+        description: Shows where the current price is inside the daily high-low range. Usually between 0 and 1.
+        data_tests:
+          - not_null

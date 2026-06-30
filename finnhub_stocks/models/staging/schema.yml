@@ -1,3 +1,10 @@
+# dbt uses this file for:
+# - model descriptions
+# - column descriptions
+# - data tests
+# - dbt docs
+
+
 version: 2
 
 models:
