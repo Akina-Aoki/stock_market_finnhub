@@ -31,5 +31,14 @@ clean-targets:         # directories to be removed by `dbt clean`
 # files using the `{{ config(...) }}` macro.
 models:
   finnhub_stocks:
-    # Config indicated by + and applies to all files under models/example
-    +materialized: view
+    staging:
+      +schema: STAGING
+      +materialized: view
+
+    intermediate:
+      +schema: INTERMEDIATE
+      +materialized: view
+
+    marts:
+      +schema: MARTS
+      +materialized: table
