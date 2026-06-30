@@ -179,6 +179,11 @@ Expected topic:
 stock_quotes
 ```
 
+Check look for kafka if running
+```
+docker ps -a
+```
+
 If `stock_quotes` is missing, recreate it:
 
 ```bash
@@ -259,48 +264,3 @@ Airflow DAG refresh time
 
 ---
 
-## 7. Quick command summary
-
-### Stop work
-
-```bash
-cd ~/de25/stock_market_finnhub
-docker compose stop
-```
-
-Then close browsers, VS Code, Docker Desktop, and shut down the PC.
-
----
-
-### Start work again
-
-```bash
-cd ~/de25/stock_market_finnhub
-source .venv_stock/Scripts/activate
-docker compose start
-docker ps
-```
-
-Then open:
-
-```text
-http://localhost:8080
-http://localhost:9000
-```
-
-Check Kafka topic:
-
-```bash
-docker exec kafka kafka-topics --list --bootstrap-server kafka:9092
-```
-
-If missing:
-
-```bash
-docker exec kafka kafka-topics \
-  --create \
-  --topic stock_quotes \
-  --bootstrap-server kafka:9092 \
-  --partitions 3 \
-  --replication-factor 1
-```

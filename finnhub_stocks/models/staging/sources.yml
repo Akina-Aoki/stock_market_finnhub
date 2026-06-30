@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: raw
+    database: FINNHUB_STOCKS_MDS
+    schema: RAW
+    tables:
+      - name: RAW_STOCK_QUOTES
+        description: Raw Finnhub stock quote JSON records loaded from S3.
