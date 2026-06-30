@@ -1,0 +1,70 @@
+version: 2
+
+models:
+  - name: stg_stock_quotes
+    description: >
+      Staging model for Finnhub stock quote data. This model reads raw JSON
+      stock quote records from the raw Snowflake table, extracts fields from
+      the VARIANT column, standardizes column names, and casts values into
+      proper SQL data types.
+
+    columns:
+      - name: symbol
+        description: Stock ticker symbol, such as AAPL, MSFT, TSLA, GOOGL, or AMZN.
+        data_tests:
+          - not_null
+
+      - name: current_price
+        description: Current stock price returned by the Finnhub quote API.
+        data_tests:
+          - not_null
+
+      - name: price_change
+        description: Price change compared to the previous closing price. This value can be positive, negative, or zero.
+        data_tests:
+          - not_null
+
+      - name: price_change_percent
+        description: Percentage price change compared to the previous closing price. This value can be positive, negative, or zero.
+        data_tests:
+          - not_null
+
+      - name: high_price
+        description: Highest stock price during the trading day.
+        data_tests:
+          - not_null
+
+      - name: low_price
+        description: Lowest stock price during the trading day.
+        data_tests:
+          - not_null
+
+      - name: open_price
+        description: Opening stock price for the trading day.
+        data_tests:
+          - not_null
+
+      - name: previous_close_price
+        description: Previous closing stock price.
+        data_tests:
+          - not_null
+
+      - name: finnhub_timestamp
+        description: Unix timestamp returned by the Finnhub API.
+        data_tests:
+          - not_null
+
+      - name: fetched_at
+        description: Timestamp when the Python producer fetched the quote from the Finnhub API.
+        data_tests:
+          - not_null
+
+      - name: source_file_name
+        description: Name of the S3 file loaded into Snowflake.
+        data_tests:
+          - not_null
+
+      - name: loaded_at
+        description: Timestamp when the raw record was loaded into Snowflake.
+        data_tests:
+          - not_null

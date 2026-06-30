@@ -40,7 +40,7 @@ SELECT
     raw_record:change::FLOAT AS price_change,
 
     -- Percentage change compared to previous close.
-    raw_record:percent_change::FLOAT AS percent_change,
+    raw_record:percent_change::FLOAT AS price_change_percent,
 
     -- Highest price of the trading day.
     raw_record:high_price::FLOAT AS high_price,
