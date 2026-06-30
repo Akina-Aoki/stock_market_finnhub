@@ -7,10 +7,12 @@ STAGING.STG_STOCK_QUOTES
 Output:
 INTERMEDIATE.INT_STOCK_QUOTE_METRICS
 
-* Extract `fetched_date` and `fetched_hour`.
-* Calculate `daily_price_range` (High minus Low).
-* Flag price movement (`up`, `down`, `flat`).
-* Add simple QA flags (e.g., `is_current_price_missing`).
+* Extracts fetched_date and fetched_hour from fetched_at.
+* Extracts loaded_date and loaded_hour from loaded_at.
+* Calculates daily_price_range as high_price - low_price.
+* Calculates daily_price_range_percent.
+* Adds price_movement_direction with values: up, down, unchanged.
+* Calculates where the current price sits inside the daily high-low range.
 */
 
 
@@ -48,11 +50,22 @@ SELECT
     loaded_at,
 
     -- Date when the quote was fetched.
+    -- Example: 2026-06-29
     CAST(fetched_at AS DATE) AS fetched_date,
 
     -- Hour when the quote was fetched.
-    -- Useful for hourly analysis.
-    DATE_TRUNC('hour', fetched_at) AS fetched_hour,
+    -- Example: 06:00
+    TO_CHAR(DATE_TRUNC('hour', fetched_at), 'HH24:MI') AS fetched_hour,
+
+
+    -- Date when the row was loaded into Snowflake.
+    -- Example: 2026-06-29
+    CAST(loaded_at AS DATE) AS loaded_date,
+
+    -- Hour when the row was loaded into Snowflake.
+    -- Example: 03:00
+    TO_CHAR(DATE_TRUNC('hour', loaded_at), 'HH24:MI') AS loaded_hour,
+
 
     -- Difference between the daily high and daily low price
     high_price - low_price AS daily_price_range,

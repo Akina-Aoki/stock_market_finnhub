@@ -92,3 +92,23 @@ models:
         description: Shows where the current price is inside the daily high-low range. Usually between 0 and 1.
         data_tests:
           - not_null
+
+      - name: loaded_at
+        description: Timestamp when the raw record was loaded into Snowflake.
+        data_tests:
+          - not_null
+
+      - name: loaded_date
+        description: Date when the raw record was loaded into Snowflake.
+        data_tests:
+          - not_null
+
+      - name: loaded_hour
+        description: Hour when the raw record was loaded into Snowflake, formatted as HH:MI.
+        data_tests:
+          - not_null
+
+      - name: source_file_name
+        description: Name of the S3 file that the raw record came from.
+        data_tests:
+          - not_null
