@@ -41,6 +41,12 @@ Start the Docker containers:
 docker compose up -d
 ```
 
+OR when docker was stopped previosly
+
+```bash
+docker compose start
+```
+
 ---
 
 ## 2. Check Docker containers
@@ -201,3 +207,27 @@ Snowflake raw_stock_quotes table still has 25 rows
 Stock quote data from yesterday is still available
 ```
 ---
+
+## 8. Check dbt version used
+
+```bash
+which dbt
+```
+
+Expect:
+`/c/Users/adelo/de25/stock_market_finnhub/.venv_stock/Scripts/dbt`
+
+If not correct:
+```bash
+cd ..
+source .venv_stock/Scripts/activate
+cd finnhub_stocks
+which dbt
+dbt --version
+```
+
+Expected:
+```
+/c/Users/adelo/de25/stock_market_finnhub/.venv_stock/Scripts/dbt
+dbt-core 1.11.11
+```

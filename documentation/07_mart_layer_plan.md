@@ -6,6 +6,24 @@ The goal of the mart layer is to create clean, analytics-ready tables. This is s
 
 ---
 
+## Pipeline Schedule Decision
+
+For the MVP version of this project, the pipeline is designed to run **once per weekday after the U.S. stock market closes**.
+
+The reason for this is that the mart layer uses a **daily grain**, meaning:
+
+> One row in the fact table represents one stock symbol on one fetched date.
+
+Because of this, the final mart does not need hourly or real-time stock records. Instead, it keeps the latest quote collected for each stock on each day.
+
+The planned Airflow schedule is:
+
+```bash
+schedule="15 21 * * 1-5"
+```
+
+---
+
 ## 1. Main decision: daily mart grain
 
 For the mart layer, we will use a **daily grain**.
@@ -281,13 +299,17 @@ We will include:
 | `stock_symbol_id` | `not_null`, `unique` |
 | `symbol` | `not_null`, `unique` |
 
+
 ### `dim_date`
 
 | Column | Tests |
 |---|---|
 | `date_id` | `not_null`, `unique` |
-| `date_day` | `not_null`, `unique` |
-
+| `calendar_date` | `not_null`, `unique` |
+| `year` | `not_null` |
+| `month` | `not_null` |
+| `month_name` | `not_null` |
+| `day` | `not_null` |
 ### `fct_stock_quotes_daily`
 
 | Column | Tests |
@@ -299,6 +321,19 @@ We will include:
 | `fetched_date` | `not_null` |
 | `current_price` | `not_null` |
 | `price_movement_direction` | `not_null`, accepted values: `up`, `down`, `unchanged` |
+
+### Extra custom tests for `fct_stock_quotes_daily`
+
+In addition to the standard dbt tests, we added custom SQL tests for business rules and grain validation.
+
+| Test file | Purpose |
+|---|---|
+| `fct_non_negative_prices.sql` | Checks that price-related columns are not negative. This excludes `price_change` and `price_change_percent` because they can be negative when a stock goes down. |
+| `fct_high_price_greater_than_low_price.sql` | Checks that `high_price` is never lower than `low_price`. |
+| `fct_price_position_range.sql` | Checks that `price_position_in_daily_range` stays between `0` and `1`. |
+| `unique_stock_date.sql` | Checks that the fact table keeps the correct grain: one row per stock symbol per fetched date. |
+
+These custom tests help validate that the mart table is not only technically correct, but also logically correct for stock quote analysis.
 
 ---
 

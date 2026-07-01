@@ -1,0 +1,17 @@
+-- dim_stock_symbol
+SELECT *
+FROM FINNHUB_STOCKS_MDS.MARTS.DIM_STOCK_SYMBOL
+ORDER BY symbol;
+
+
+-- dim_date
+SELECT *
+FROM FINNHUB_STOCKS_MDS.MARTS.DIM_DATE
+ORDER BY calendar_date;
+
+
+-- fact_daily
+SELECT *
+FROM FINNHUB_STOCKS_MDS.MARTS.FCT_STOCK_QUOTES_DAILY
+ORDER BY symbol, fetched_date;
+
