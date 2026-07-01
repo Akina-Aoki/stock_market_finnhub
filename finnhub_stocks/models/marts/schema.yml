@@ -1,0 +1,162 @@
+version: 2
+
+models:
+  - name: dim_stock_symbol
+    description: >
+      Dimension table for stock symbols. This table contains one row per stock
+      ticker symbol and is used to join stock quote facts to the stock symbol
+      dimension.
+
+    columns:
+      - name: stock_symbol_id
+        description: Readable unique ID for each stock symbol, such as AAPL0001.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: symbol
+        description: Stock ticker symbol, such as AAPL, MSFT, TSLA, GOOGL, or AMZN.
+        data_tests:
+          - not_null
+          - unique
+
+
+  - name: dim_date
+    description: >
+      Date dimension based on the date when the stock quote was fetched from
+      the Finnhub API. This is not the Snowflake load date.
+
+    columns:
+      - name: date_id
+        description: Date key in YYYYMMDD format, such as 20260629.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: calendar_date
+        description: Actual calendar date when the stock quote was fetched.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: year
+        description: Year extracted from calendar_date.
+        data_tests:
+          - not_null
+
+      - name: month
+        description: Month number extracted from calendar_date.
+        data_tests:
+          - not_null
+
+      - name: month_name
+        description: Month name extracted from calendar_date.
+        data_tests:
+          - not_null
+
+      - name: day
+        description: Day of the month extracted from calendar_date.
+        data_tests:
+          - not_null
+
+
+  - name: fct_stock_quotes_daily
+    description: >
+      Daily fact table for stock quotes. This table contains one row per stock
+      symbol per fetched date. If multiple quotes exist for the same stock and
+      date, the latest quote based on fetched_at is kept.
+
+    columns:
+      - name: stock_quote_id
+        description: Unique ID for each daily stock quote row, such as AAPL_20260629.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: stock_symbol_id
+        description: Foreign key to dim_stock_symbol.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_stock_symbol')
+                field: stock_symbol_id
+
+      - name: date_id
+        description: Foreign key to dim_date.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_id
+
+      - name: symbol
+        description: Stock ticker symbol kept in the fact table for readability.
+        data_tests:
+          - not_null
+
+      - name: fetched_date
+        description: Date when the quote was fetched from the Finnhub API.
+        data_tests:
+          - not_null
+
+      - name: current_price
+        description: Latest current stock price for the stock symbol and fetched date, rounded to 2 decimals.
+        data_tests:
+          - not_null
+
+      - name: price_change
+        description: Price change compared with the previous close, rounded to 2 decimals.
+        data_tests:
+          - not_null
+
+      - name: price_change_percent
+        description: Price change percentage compared with the previous close, rounded to 2 decimals.
+        data_tests:
+          - not_null
+
+      - name: high_price
+        description: Highest stock price for the trading day, rounded to 2 decimals.
+        data_tests:
+          - not_null
+
+      - name: low_price
+        description: Lowest stock price for the trading day, rounded to 2 decimals.
+        data_tests:
+          - not_null
+
+      - name: open_price
+        description: Opening stock price for the trading day, rounded to 2 decimals.
+        data_tests:
+          - not_null
+
+      - name: previous_close_price
+        description: Previous closing stock price, rounded to 2 decimals.
+        data_tests:
+          - not_null
+
+      - name: daily_price_range
+        description: Difference between the high price and low price, rounded to 2 decimals.
+        data_tests:
+          - not_null
+
+      - name: daily_price_range_percent
+        description: Daily price range as a percentage of the previous close price, rounded to 2 decimals.
+        data_tests:
+          - not_null
+
+      - name: price_movement_direction
+        description: Simple stock movement label based on price_change.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['up', 'down', 'unchanged']
+
+      - name: price_position_in_daily_range
+        description: >
+          Shows where the current price sits inside the daily high-low range.
+          A value close to 0 means near the low, and a value close to 1 means near the high.
+        data_tests:
+          - not_null
