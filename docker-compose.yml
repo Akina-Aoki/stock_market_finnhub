@@ -55,10 +55,17 @@ services:
     environment:
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - _PIP_ADDITIONAL_REQUIREMENTS=kafka-python boto3 snowflake-connector-python dbt-core dbt-snowflake python-dotenv requests
+      - DBT_PROFILES_DIR=/opt/airflow/finnhub_stocks
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
+      - ./producer:/opt/airflow/producer
+      - ./consumer:/opt/airflow/consumer
+      - ./finnhub_stocks:/opt/airflow/finnhub_stocks
+      - ./sql:/opt/airflow/sql
     ports:
       - "8080:8080"
     command: webserver
@@ -74,10 +81,17 @@ services:
     environment:
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - _PIP_ADDITIONAL_REQUIREMENTS=kafka-python boto3 snowflake-connector-python dbt-core dbt-snowflake python-dotenv requests
+      - DBT_PROFILES_DIR=/opt/airflow/finnhub_stocks
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
+      - ./producer:/opt/airflow/producer
+      - ./consumer:/opt/airflow/consumer
+      - ./finnhub_stocks:/opt/airflow/finnhub_stocks
+      - ./sql:/opt/airflow/sql
     command: scheduler
 
   postgres:
