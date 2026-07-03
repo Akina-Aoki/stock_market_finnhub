@@ -1,3 +1,31 @@
+# Checklist
+
+| Requirement              |        Status | Notes                                                                                                           |
+| ------------------------ | ------------: | --------------------------------------------------------------------------------------------------------------- |
+| External data ingestion  | ✅ Mostly done | Finnhub API ingestion and raw data loaded into Snowflake. Need Airflow to run it automatically.                |
+| Raw / landing layer      |        ✅ Done | `RAW.RAW_STOCK_QUOTES` exists in Snowflake. Dbt catalog shows the raw source with 25 rows.                 |
+| Staging layer            |        ✅ Done | `stg_stock_quotes` exists as a Snowflake view in the `STAGING` schema.                                          |
+| Intermediate layer       |        ✅ Done | `int_stock_quote_metrics` exists as a Snowflake view in the `INTERMEDIATE` schema.                              |
+| Mart layer               |        ✅ Done | Built `dim_stock_symbol`, `dim_date`, and `fct_stock_quotes_daily`.                                         |
+| Star schema              |        ✅ Done | Mart layer uses two dimensions and one fact table: `dim_stock_symbol → fct_stock_quotes_daily ← dim_date`.  |
+| dbt tests                |        ✅ Done | Latest `dbt build --select marts` all passed and `ERROR=0`.                                        |
+| dbt docs                 |        ✅ Done | Generated and served dbt docs on port `8081`.                                                               |
+| Airflow orchestration    |       🔜 Next | Airflow exists, but still need the real project DAG.                                                         |
+| README final explanation |      🔜 Later | Update README after Airflow is working.                                                               |
+| Dashboard / outputs      |      🔜 Later | Build this after enough daily records exist.                                                             |
+
+
+### Data Quality Status
+| Data quality area     |  Status   | How                                                                                                        |
+| --------------------- | --------: | ---------------------------------------------------------------------------------------------------------- |
+| Missing values        |     ✅ Yes | `not_null` tests                                                                                           |
+| Duplicates            |     ✅ Yes | `unique` tests and      `unique_stock_date` test                                                           |
+| Relationships         |     ✅ Yes | Fact table foreign keys tested against dimensions                                                          |
+| Accepted values       |     ✅ Yes | `price_movement_direction` only allows `up`, `down`, `unchanged`                                           |
+| Business logic checks |     ✅ Yes | Checks like non-negative prices, high price greater than low price, and price position range               |
+| Row counts            | 🟡 Partly | dbt docs/catalog shows row counts, but have not yet made row count a formal Airflow/dbt validation task     |
+
+
 # Restart and Validation Flow
 
 This guide shows the simple flow used to restart the local project and confirm that everything is working again.
