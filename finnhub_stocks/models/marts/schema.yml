@@ -91,16 +91,6 @@ models:
                 to: ref('dim_date')
                 field: date_id
 
-      - name: symbol
-        description: Stock ticker symbol kept in the fact table for readability.
-        data_tests:
-          - not_null
-
-      - name: fetched_date
-        description: Date when the quote was fetched from the Finnhub API.
-        data_tests:
-          - not_null
-
       - name: current_price
         description: Latest current stock price for the stock symbol and fetched date, rounded to 2 decimals.
         data_tests:

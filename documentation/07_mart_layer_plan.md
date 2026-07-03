@@ -180,8 +180,6 @@ One row per stock symbol per fetched date.
 | `stock_quote_id` | Generated unique ID for each daily stock quote row | `not_null`, `unique` |
 | `stock_symbol_id` | Foreign key to `dim_stock_symbol` | `not_null`, `relationships` |
 | `date_id` | Foreign key to `dim_date` | `not_null`, `relationships` |
-| `symbol` | Stock ticker symbol kept for readability | `not_null` |
-| `fetched_date` | Date when the quote was fetched | `not_null` |
 | `current_price` | Latest current price for that stock/date | `not_null` |
 | `price_change` | Price change compared to previous close | `not_null` |
 | `price_change_percent` | Price change percentage | `not_null` |
