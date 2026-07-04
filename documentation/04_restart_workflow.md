@@ -112,6 +112,7 @@ Expected topic:
 
 ```text
 stock_quotes
+__consumer_offsets
 ```
 
 If `stock_quotes` appears, Kafka is working.
