@@ -12,7 +12,8 @@ services:
     image: confluentinc/cp-kafka:7.4.1
     container_name: kafka
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_started
     ports:
       - "9092:9092"    # internal Docker network
       - "29092:29092"  # external host machine
@@ -32,12 +33,19 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    healthcheck:
+      test: ["CMD", "bash", "-c", "kafka-broker-api-versions --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 18
+      start_period: 30s
 
   kafdrop:
     image: obsidiandynamics/kafdrop:latest
     container_name: kafdrop
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     ports:
       - "9000:9000"
     environment:
@@ -48,8 +56,12 @@ services:
     container_name: airflow-webserver
     restart: always
     depends_on:
-      - airflow-scheduler
-      - postgres
+      airflow-scheduler:
+        condition: service_started
+      postgres:
+        condition: service_started
+      kafka:
+        condition: service_healthy
     env_file:
     - .env
     environment:
@@ -75,7 +87,10 @@ services:
     container_name: airflow-scheduler
     restart: always
     depends_on:
-      - postgres
+      postgres:
+        condition: service_started
+      kafka:
+        condition: service_healthy
     env_file:
       - .env
     environment:

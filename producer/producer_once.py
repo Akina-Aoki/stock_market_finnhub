@@ -10,6 +10,7 @@ all messages are flushed and the Kafka producer is closed.
 
 import json
 import os
+import time
 import uuid
 from datetime import datetime, timezone
 
@@ -25,6 +26,10 @@ API_KEY = os.getenv("FINNHUB_API_KEY")
 BASE_URL = "https://finnhub.io/api/v1/quote"
 SYMBOLS = ["AAPL", "MSFT", "TSLA", "GOOGL", "AMZN"]
 KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:29092")
+KAFKA_CONNECT_RETRIES = int(os.getenv("KAFKA_CONNECT_RETRIES", "6"))
+KAFKA_CONNECT_RETRY_DELAY_SECONDS = int(
+    os.getenv("KAFKA_CONNECT_RETRY_DELAY_SECONDS", "10")
+)
 KAFKA_TOPIC = "stock_quotes"
 RUN_ID = os.getenv("RUN_ID")
 
@@ -45,18 +50,36 @@ if not API_KEY:
 
 def create_producer() -> KafkaProducer:
     """Create a Kafka producer that serializes messages as JSON bytes."""
-    try:
-        producer = KafkaProducer(
-            bootstrap_servers=[KAFKA_BOOTSTRAP_SERVERS],
-            value_serializer=lambda value: json.dumps(value).encode("utf-8"),
-            retries=3,
-            request_timeout_ms=30000,
-            max_block_ms=30000,
-        )
-        print(f"Connected Kafka producer to bootstrap server: {KAFKA_BOOTSTRAP_SERVERS}")
-        return producer
-    except KafkaError as error:
-        raise RuntimeError(f"Failed to create Kafka producer: {error}") from error
+    last_error: KafkaError | None = None
+
+    for attempt in range(1, KAFKA_CONNECT_RETRIES + 1):
+        try:
+            producer = KafkaProducer(
+                bootstrap_servers=[KAFKA_BOOTSTRAP_SERVERS],
+                value_serializer=lambda value: json.dumps(value).encode("utf-8"),
+                retries=3,
+                request_timeout_ms=30000,
+                max_block_ms=30000,
+            )
+            print(
+                "Connected Kafka producer to bootstrap server: "
+                f"{KAFKA_BOOTSTRAP_SERVERS}"
+            )
+            return producer
+        except KafkaError as error:
+            last_error = error
+            print(
+                "Kafka producer bootstrap failed "
+                f"(attempt {attempt}/{KAFKA_CONNECT_RETRIES}): {error}."
+            )
+
+            if attempt == KAFKA_CONNECT_RETRIES:
+                break
+
+            print(f"Retrying in {KAFKA_CONNECT_RETRY_DELAY_SECONDS} seconds...")
+            time.sleep(KAFKA_CONNECT_RETRY_DELAY_SECONDS)
+
+    raise RuntimeError(f"Failed to create Kafka producer: {last_error}") from last_error
 
 
 def fetch_quote(symbol: str, run_id: str) -> dict:

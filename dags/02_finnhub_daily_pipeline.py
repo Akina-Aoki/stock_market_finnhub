@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import pendulum
 import snowflake.connector
@@ -187,7 +187,7 @@ def check_mart_row_count(**context) -> None:
 with DAG(
     dag_id="finnhub_daily_stock_pipeline",
     start_date=pendulum.datetime(2026, 1, 1, tz="Europe/Stockholm"),
-    schedule="0 23 * * 1-5",
+    schedule="0 * * * *",
     catchup=False,
     max_active_runs=1,
     tags=["finnhub", "kafka", "s3", "snowflake", "dbt"],
@@ -204,6 +204,8 @@ with DAG(
         bash_command="python /opt/airflow/producer/producer_once.py",
         env={"RUN_ID": "{{ ti.xcom_pull(task_ids='create_run_id') }}"},
         append_env=True,
+        retries=3,
+        retry_delay=timedelta(minutes=1),
     )
 
     run_consumer = BashOperator(
@@ -211,6 +213,8 @@ with DAG(
         bash_command="python /opt/airflow/consumer/consumer_once.py",
         env={"RUN_ID": "{{ ti.xcom_pull(task_ids='create_run_id') }}"},
         append_env=True,
+        retries=3,
+        retry_delay=timedelta(minutes=1),
     )
 
     copy_s3_to_snowflake_task = PythonOperator(
