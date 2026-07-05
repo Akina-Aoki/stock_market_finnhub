@@ -63,6 +63,7 @@ Finnhub Free: 60 calls/min + free WebSocket, good data (watch pre-market volume)
 | Consumer scripts | [`consumer.py`](consumer/consumer.py) is for continuous Kafka consumption, while [`consumer_once.py`](consumer/consumer_once.py) is for one-time consumption used by Airflow. |
 | Python requirements | [`requirements.txt`](requirements.txt) |
 | Local Docker Compose setup | [`docker-compose.yml`](docker-compose.yml) |
+| Optional Terraform infrastructure-as-code | [`terraform/`](terraform/) provisions the raw S3 bucket plus Snowflake database, warehouse, and layer schemas. |
 | dbt Snowflake profile | [`finnhub_stocks/profiles.yml`](finnhub_stocks/profiles.yml) |
 | dbt staging models | [`finnhub_stocks/models/staging/`](finnhub_stocks/models/staging/) |
 | dbt intermediate models | [`finnhub_stocks/models/intermediate/`](finnhub_stocks/models/intermediate/) |

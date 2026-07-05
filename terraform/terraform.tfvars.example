@@ -1,0 +1,20 @@
+# Copy this file to terraform.tfvars for local testing, then replace placeholder values.
+# Never commit terraform.tfvars because it may contain account-specific settings or secrets.
+
+aws_region      = "eu-north-1"
+raw_bucket_name = "your-unique-finnhub-raw-bucket-name"
+
+snowflake_organization_name = "YOUR_ORG_NAME"
+snowflake_account_name      = "YOUR_ACCOUNT_NAME"
+snowflake_user              = "YOUR_TERRAFORM_USER"
+snowflake_role              = "ACCOUNTADMIN"
+
+# Prefer environment variables for secrets instead of writing them here:
+# export TF_VAR_snowflake_password='your-password'
+# or
+# export TF_VAR_snowflake_private_key_file='/absolute/path/to/snowflake_key.p8'
+
+snowflake_database_name         = "FINNHUB_STOCKS_MDS"
+snowflake_warehouse_name        = "FINNHUB_STOCKS_MDS_WH"
+snowflake_warehouse_size        = "XSMALL"
+snowflake_auto_suspend_seconds  = 60
