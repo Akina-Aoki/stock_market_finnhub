@@ -152,7 +152,7 @@ If Docker is working, you should get a table of containers, even if nothing is r
 
 ---
 
-Do not start everything immediately with docker compose up -d if the computer was paused or shut down.
+Do not start everything immediately with `docker compose up -d` if the computer was paused or shut down.
 
 #### zookeeper
 Do not start everything immediately with `docker compose up -d` if the computer was paused or shut down.
@@ -172,6 +172,8 @@ Check that Zookeeper is running:
 You should see:
 
 `zookeeper   Up`
+
+---
 
 #### kafka
 
@@ -241,7 +243,9 @@ Open this in the browser:
 http://localhost:8080
 ```
 
-If it is webserver PID file is stale, run:
+---
+
+#### If it is webserver PID file is stale, run:
 `docker exec -it airflow-webserver bash -c "rm -f /opt/airflow/airflow-webserver.pid"`
 
 Restart only thr airflow webserver:
@@ -445,13 +449,13 @@ cd ~/de25/stock_market_finnhub/finnhub_stocks
 dbt run --select dim_stock_symbol dim_date fct_stock_quotes_daily
 ```
 
-```bash
+``` bash
 dbt test --select dim_stock_symbol dim_date fct_stock_quotes_daily
 ```
 
 Expected result:
 
-```text
+``` text
 Completed successfully
 ```
 
@@ -462,10 +466,6 @@ Completed successfully
 Use this before the full demo.
 
 From the dbt project folder:
-
-```bash
-cd ~/de25/stock_market_finnhub/finnhub_stocks
-```
 
 Generate docs:
 
@@ -598,9 +598,19 @@ docker exec -it airflow-scheduler bash -c "airflow dags list-runs -d finnhub_dai
 In Snowflake, show the schemas/tables:
 
 ```sql
-SHOW TABLES IN SCHEMA FINNHUB_STOCKS_MDS.RAW;
-SHOW TABLES IN SCHEMA FINNHUB_STOCKS_MDS.STAGING;
-SHOW TABLES IN SCHEMA FINNHUB_STOCKS_MDS.INTERMEDIATE;
+-- SHOW TABLES IN SCHEMA FINNHUB_STOCKS_MDS.STAGING; -- will not show since it's a view tables
+-- Use this to show view tables instead
+SHOW VIEWS IN SCHEMA FINNHUB_STOCKS_MDS.STAGING;
+
+
+
+SHOW TABLES IN SCHEMA FINNHUB_STOCKS_MDS.INTERMEDIATE;   -- will not show since it's a view tables
+-- Use this to show view tables instead
+SHOW VIEWS IN SCHEMA FINNHUB_STOCKS_MDS.INTERMEDIATE;
+
+
+
+-- Marts layer is a table 
 SHOW TABLES IN SCHEMA FINNHUB_STOCKS_MDS.MARTS;
 ```
 
