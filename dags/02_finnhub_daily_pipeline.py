@@ -1,3 +1,13 @@
+"""Orchestrate the Finnhub daily stock quote ingestion pipeline.
+
+This Airflow DAG coordinates one batch of stock quote data from the Finnhub
+producer through Kafka, an S3 landing area, Snowflake RAW storage, dbt models,
+dbt tests, and a final MARTS validation. The workflow is designed to make each
+batch traceable with a shared ``run_id`` so data engineers can connect records
+across ingestion, loading, transformation, and validation steps. 
+"""
+
+
 import os
 from datetime import datetime, timezone, timedelta
 
@@ -14,7 +24,14 @@ SNOWFLAKE_RAW_SCHEMA = "RAW"
 
 
 def create_run_id(**context) -> str:
-    """Create a deterministic Airflow run_id for downstream batch filtering."""
+    """Build the batch identifier used to trace this DAG run.
+
+    The value is derived from Airflow's logical date when available, which keeps
+    the identifier deterministic for a scheduled run. Downstream ingestion,
+    loading, and validation tasks use the same value for batch lineage and for
+    filtering Snowflake checks to only the records produced by this run.
+    """
+    
     logical_date = context.get("logical_date")
 
     if logical_date is None:
@@ -30,7 +47,12 @@ def create_run_id(**context) -> str:
 
 
 def get_snowflake_connection(schema: str = SNOWFLAKE_RAW_SCHEMA):
-    """Create a Snowflake connection from Airflow environment variables."""
+    """Open a Snowflake connection using Airflow-provided .env settings.
+
+    Keeping connection creation in one helper makes Snowflake access consistent
+    across tasks and avoids duplicating credential, warehouse, database, and
+    schema configuration in each validation or loading function.
+    """
     return snowflake.connector.connect(
         account=os.getenv("SNOWFLAKE_ACCOUNT"),
         user=os.getenv("SNOWFLAKE_USER"),
@@ -43,7 +65,13 @@ def get_snowflake_connection(schema: str = SNOWFLAKE_RAW_SCHEMA):
 
 
 def copy_s3_to_snowflake() -> None:
-    """Load JSONL quote files from the configured S3 stage into RAW.raw_stock_quotes."""
+    """Load staged JSONL quote files from S3 into the Snowflake RAW layer.
+
+    ``COPY INTO`` is Snowflake's bulk-loading pattern for moving files from an
+    external stage into a table. This task preserves the original JSON payload in
+    ``raw_record`` and stores the source file name so the raw layer remains an
+    auditable, minimally transformed record of what landed from ingestion.
+    """
     copy_sql = """
         COPY INTO raw_stock_quotes (raw_record, source_file_name)
         FROM (
@@ -63,7 +91,15 @@ def copy_s3_to_snowflake() -> None:
 
 
 def check_raw_batch_quality(**context) -> None:
-    """Validate row count, symbol coverage, required fields, and duplicates in RAW."""
+    """Validate that the current raw batch is complete and usable for dbt.
+
+    The check is scoped to the shared ``run_id`` so it evaluates only this DAG
+    run's batch. It verifies expected row volume, symbol coverage, required JSON
+    fields, and duplicate symbols before allowing downstream dbt models to build
+    curated analytics tables from the RAW layer.
+    """
+    # XCom carries the run_id from the batch creation task to validation tasks
+    # without hard-coding dates, preserving lineage across the orchestrated run.
     run_id = context["ti"].xcom_pull(task_ids="create_run_id")
     if not run_id:
         raise AirflowException("Missing run_id from create_run_id XCom.")
@@ -115,6 +151,8 @@ def check_raw_batch_quality(**context) -> None:
         f"duplicate_symbols={duplicate_symbols}"
     )
 
+    # RAW quality validation catches incomplete, malformed, or duplicated input
+    # before transformation so bad source data does not propagate to marts.
     quality_errors = []
     if row_count != EXPECTED_RAW_ROW_COUNT:
         quality_errors.append(
@@ -147,7 +185,15 @@ def check_raw_batch_quality(**context) -> None:
 
 
 def check_mart_row_count(**context) -> None:
-    """Validate that marts contain rows for the current batch's fetched date."""
+    """Confirm the final mart contains analytics rows for this batch date.
+
+    The check derives the batch's fetched date from RAW records and then confirms
+    the dbt-built fact table has rows for that date. This validates that data was
+    not only ingested, but also transformed into the MARTS layer where analysts
+    and dashboards are expected to query it.
+    """
+    # The same XCom-provided run_id links mart validation back to the exact raw
+    # batch, keeping the final analytics check tied to upstream lineage.
     run_id = context["ti"].xcom_pull(task_ids="create_run_id")
     if not run_id:
         raise AirflowException("Missing run_id from create_run_id XCom.")
@@ -192,13 +238,18 @@ with DAG(
     max_active_runs=1,
     tags=["finnhub", "kafka", "s3", "snowflake", "dbt"],
 ) as dag:
+    # Pipeline start: gives the DAG a clear entry point in the Airflow graph.
     start = EmptyOperator(task_id="start")
 
+    # Batch ID creation: one run_id is shared by all tasks for lineage,
+    # idempotency, and scoped validation of this scheduled batch.
     create_run_id_task = PythonOperator(
         task_id="create_run_id",
         python_callable=create_run_id,
     )
 
+    # Ingestion tasks: Airflow passes run_id through XCom templating into the
+    # producer/consumer environment so Kafka and S3 records keep batch context.
     run_producer = BashOperator(
         task_id="run_producer_once",
         bash_command="python /opt/airflow/producer/producer_once.py",
@@ -208,6 +259,8 @@ with DAG(
         retry_delay=timedelta(minutes=1),
     )
 
+    # Snowflake loading: COPY INTO moves staged S3 files into the RAW layer,
+    # keeping ingestion data available for replay, auditing, and transformation.
     run_consumer = BashOperator(
         task_id="run_consumer_once",
         bash_command="python /opt/airflow/consumer/consumer_once.py",
@@ -217,11 +270,14 @@ with DAG(
         retry_delay=timedelta(minutes=1),
     )
 
+    # Quality checks: validate the raw batch before dbt builds curated models.
     copy_s3_to_snowflake_task = PythonOperator(
         task_id="copy_s3_to_snowflake",
         python_callable=copy_s3_to_snowflake,
     )
 
+    # dbt transformation/testing: dbt run builds the models first; dbt test then
+    # checks the freshly built outputs for expected constraints and assumptions.
     check_raw_batch_quality_task = PythonOperator(
         task_id="check_raw_batch_quality",
         python_callable=check_raw_batch_quality,
@@ -239,11 +295,14 @@ with DAG(
         append_env=True,
     )
 
+    # Mart validation: confirm the final analytics layer has rows for this batch
+    # date, proving the data reached the table used by downstream consumers.
     check_mart_row_count_task = PythonOperator(
         task_id="check_mart_row_count",
         python_callable=check_mart_row_count,
     )
 
+    # Pipeline end: marks successful completion after all validation has passed.
     end = EmptyOperator(task_id="end")
 
     (
