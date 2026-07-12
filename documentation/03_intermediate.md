@@ -1,24 +1,17 @@
-# Intermediate Layer Columns Descriptions
+### Layer 2: Intermediate
+**This model takes the clean stock quote data from the staging layer and adds a few useful columns for analysis and business use.**
 
+Create `int_stock_quote_metrics.sql`. This add the "brains" to the data:
+* Extract `fetched_date` and `fetched_hour`.
+* Calculate `daily_price_range` (High minus Low).
+* Flag price movement (`up`, `down`, `flat`).
+* Add simple QA flags (e.g., `is_current_price_missing`).
 
 Model: `int_stock_quote_metrics`  
 Snowflake table/view: `FINNHUB_STOCKS_MDS.INTERMEDIATE.INT_STOCK_QUOTE_METRICS`  
 Input model: `STAGING.STG_STOCK_QUOTES`
 
 
-This model takes the clean stock quote data from the staging layer and adds a few useful columns for analysis and business use.
-
-The staging model mostly answered:
-
-> Is the raw JSON cleaned and typed correctly?
-
-This intermediate model starts answering:
-
-> What business aspects can we learn from the stock quote data?
-
-So this is where we begin adding simple stock-related calculations.
-
-## Column guide
 
 | Column | Description | Source / Calculation |
 |---|---|---|
@@ -41,6 +34,7 @@ So this is where we begin adding simple stock-related calculations.
 | `price_movement_direction` | A simple label showing if the stock went `up`, `down`, or stayed `unchanged`. | Based on `price_change`. |
 | `price_position_in_daily_range` | Shows where the current price is between the daily low and high. | `(current_price - low_price) / NULLIF(high_price - low_price, 0)` |
 
+
 ## Calculated columns
 
 ### `daily_price_range`
@@ -51,15 +45,7 @@ high_price - low_price
 
 How much the stock moved between its lowest and highest price of the day.
 
-Example:
-
-```text
-high_price = 376.61
-low_price  = 355.43
-range      = 21.18
-```
-
-So the stock moved within a range of `21.18` during the day.
+---
 
 ### `daily_price_range_percent`
 
@@ -72,6 +58,8 @@ Daily range as a percentage.
 This is useful because different stocks have different prices. A `10` dollar movement means something different for a `100` dollar stock compared to a `1000` dollar stock.
 
 `NULLIF(previous_close_price, 0)` is there to avoid dividing by zero.
+
+---
 
 ### `price_movement_direction`
 
@@ -94,6 +82,8 @@ unchanged
 ```
 
 Dashboarding use
+
+---
 
 ### `price_position_in_daily_range`
 

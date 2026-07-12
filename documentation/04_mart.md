@@ -1,119 +1,25 @@
-# 07 Mart Layer Star Schema Plan
-
-This is the revised plan for the mart layer of the Finnhub stock quote project.
-
+## Layer 3: Marts (⭐Show Data Model)
 The goal of the mart layer is to create clean, analytics-ready tables. This is similar to the Gold layer in the Databricks project. The staging and intermediate layers can still keep technical details, but the mart layer should be easier to use for analysis, dashboards, and explanation.
 
----
+**Because the mart layer is final and analytics-ready, these models should be materialized as tables.**
 
-## Pipeline Schedule Decision
-
-For the MVP version of this project, the pipeline is designed to run **once per weekday after the U.S. stock market closes**.
-
-The reason for this is that the mart layer uses a **daily grain**, meaning:
-
-> One row in the fact table represents one stock symbol on one fetched date.
-
-Because of this, the final mart does not need hourly or real-time stock records. Instead, it keeps the latest quote collected for each stock on each day.
-
-The planned Airflow schedule is:
-
-```bash
-schedule="15 21 * * 1-5"
-```
 
 ---
 
-## 1. Main decision: daily mart grain
+### Build three simple models here: ⭐ Star Schema
 
-For the mart layer, we will use a **daily grain**.
+1. **`dim_stock_symbol`**: A dimension table containing stock symbols.
 
-This means:
+2. **`fct_stock_quotes`**: Main fact table, fed directly from intermediate model. One row per quote snapshot. 
 
-> One row in the fact table = one stock symbol on one fetched date.
+3. **`dim_date`**: This dimensional table creates one row per fetched date.
+It helps dashboards filter by year, month, and day. 
+        Grain: One row per fetched date.
 
-Example:
 
-| symbol | fetched_date | meaning |
-|---|---:|---|
-| AAPL | 2026-06-29 | latest AAPL quote collected on this date |
-| MSFT | 2026-06-29 | latest MSFT quote collected on this date |
-
-Because the mart is daily, we will **not keep fetched hour** in the mart table.
-
-The detailed timestamp and hour columns can stay in the intermediate layer, but the final mart should be simpler.
-
----
-
-## 2. Why daily grain makes sense for this project
-
-Right now, the producer can fetch data many times, but the final project does not need to act like Yahoo Finance or a real-time trading platform.
-
-This project is mainly a modern data stack project. It should show:
-
-- data ingestion
-- raw storage
-- Snowflake loading
-- dbt transformations
-- data quality tests
-- star schema modeling
-- analytics-ready output
-
-For this reason, a daily stock quote mart is enough and easier to explain.
-
-Later, if the pipeline is scheduled once per day with Airflow, this daily grain will also make more sense.
-
----
-
-## 3. What happens if there are many records per stock per day?
-
-Because the current pipeline may collect several quotes on the same day, we need a rule.
-
-The rule will be:
-
-> For each stock symbol and fetched date, keep the latest quote based on `fetched_at`.
-
-Example:
-
-| symbol | fetched_date | fetched_at | keep? |
-|---|---:|---:|---|
-| AAPL | 2026-06-29 | 06:11:39 | no |
-| AAPL | 2026-06-29 | 06:12:11 | yes |
-
-This creates a clean daily fact table.
-
----
-
-## 4. Star schema design
-
-The mart layer will have two dimension tables and one fact table.
-
-```text
-dim_stock_symbol
-        |
-        | stock_symbol_id
-        ↓
-fct_stock_quotes_daily
-        ↑
-        | date_id
-dim_date
-```
-
-This is a simple star schema.
-
-The fact table stores the measurable stock quote values.
-
-The dimension tables store descriptive information used for filtering and grouping.
-
----
-
-## 5. Conceptual model
-
-At a high level, the model is about this:
+## Conceptual model
 
 > A stock has a daily quote on a specific date.
-
-Entities:
 
 | Entity | Meaning |
 |---|---|
@@ -121,7 +27,6 @@ Entities:
 | Date | The date when the quote was fetched |
 | Stock quote daily fact | The daily stock quote values and calculated metrics |
 
-Relationships:
 
 | Relationship | Meaning |
 |---|---|
@@ -131,7 +36,7 @@ Relationships:
 
 ---
 
-## 6. Logical model
+## Logical model
 
 ### `dim_stock_symbol`
 
@@ -163,12 +68,6 @@ This dimension will be created from `fetched_date` in the intermediate model.
 | `day_of_week` | Day number of the week |  |
 | `day_name` | Day name, such as Monday |  |
 
-Why this table is useful:
-
-- It makes the star schema clearer.
-- It lets dashboards filter by year, month, day, and weekday.
-- It avoids repeating date logic in every fact table.
-
 ---
 
 ### `fct_stock_quotes_daily`
@@ -194,7 +93,7 @@ One row per stock symbol per fetched date.
 
 ---
 
-## 7. Columns we will not include in the mart fact table
+## Columns we will not include in the mart fact table
 
 These columns are useful for debugging and lineage, but they are not needed in the main analytics-ready mart.
 
@@ -208,13 +107,8 @@ These columns are useful for debugging and lineage, but they are not needed in t
 | `fetched_at` | Too detailed for daily grain |
 | `fetched_hour` | Removed because the mart is daily, not hourly |
 
-These columns can stay in staging and intermediate models.
 
-If we later want a pipeline freshness dashboard, we can create a separate mart for pipeline monitoring.
-
----
-
-## 8. Rounding decision
+## Rounding decision
 
 For the mart layer, we will round numeric values to make the table more analytics-ready.
 
@@ -233,62 +127,9 @@ This is a conscious trade-off.
 - Not ideal for advanced financial calculations
 - If we need exact values later, we should use intermediate or raw precise columns
 
-Decision:
 
-> Keep precise values in staging and intermediate. Round values in the mart layer because the mart is the final analytics-ready table.
 
-Recommended rounding:
-
-| Column type | Rounding |
-|---|---:|
-| Price columns | 2 decimals |
-| Percentage columns | 2 decimals |
-| `price_position_in_daily_range` | 4 decimals |
-
-Example:
-
-| Column | Example before | Example in mart |
-|---|---:|---:|
-| `price_change_percent` | `5.7081` | `5.71` |
-| `daily_price_range_percent` | `6.002890911` | `6.00` |
-| `price_position_in_daily_range` | `0.8281397545` | `0.8281` |
-
-Important note:
-
-`price_change_percent = 5.71` means `5.71%`.
-
-We do not store the `%` symbol in Snowflake because then the column becomes text. The dashboard can display the `%` symbol.
-
----
-
-## 9. Physical model
-
-Snowflake mart tables:
-
-```text
-FINNHUB_STOCKS_MDS.MARTS.DIM_STOCK_SYMBOL
-FINNHUB_STOCKS_MDS.MARTS.DIM_DATE
-FINNHUB_STOCKS_MDS.MARTS.FCT_STOCK_QUOTES_DAILY
-```
-
-dbt model files:
-
-```text
-finnhub_stocks/models/marts/dim_stock_symbol.sql
-finnhub_stocks/models/marts/dim_date.sql
-finnhub_stocks/models/marts/fct_stock_quotes_daily.sql
-finnhub_stocks/models/marts/schema.yml
-```
-
-Because the mart layer is final and analytics-ready, these models should be materialized as tables.
-
----
-
-## 10. Tests needed for the mart layer
-
-The PDF says the mart layer should include tests such as `not_null`, `unique`, and relationships where applicable.
-
-We will include:
+## Tests needed for the mart layer
 
 ### `dim_stock_symbol`
 
@@ -333,33 +174,3 @@ In addition to the standard dbt tests, we added custom SQL tests for business ru
 
 These custom tests help validate that the mart table is not only technically correct, but also logically correct for stock quote analysis.
 
----
-
-## 11. Dashboard ideas from the mart layer
-
-The dashboard can use the mart tables to show:
-
-- latest daily quote per stock
-- current price by stock
-- price change percentage by stock
-- up/down/unchanged movement
-- daily price range
-- stock comparison by date
-- filters for year, month, day, and weekday
-
-This keeps the dashboard simple and aligned with the modeled data.
-
----
-
-## 12. Build order
-
-We will build the mart layer in this order:
-
-1. `dim_stock_symbol`
-2. `dim_date`
-3. `fct_stock_quotes_daily`
-4. `schema.yml` with mart tests
-5. run dbt models and tests
-6. check the tables in Snowflake
-
-This keeps the work small and easier to debug.

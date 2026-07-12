@@ -1,6 +1,4 @@
-# dbt Transformation Plan
-
-## 1. dbt Architecture
+# dbt Architecture
 
 Think of this in three layers, moving from raw data to dashboard-ready metrics.
 
@@ -11,10 +9,10 @@ Think of this in three layers, moving from raw data to dashboard-ready metrics.
 | **Marts** | `dim_`, `fct_` | **Analyze:** Final tables for dashboards and reporting. | `fct_stock_quotes` |
 
 
-## 2. Pipeline
+## Pipeline
 
 ### Layer 1: Staging
-`stg_stock_quotes`
+`stg_stock_quotes.sql`
 * extracts JSON fields
 * renames columns into clean snake_case
 * casts data types
@@ -35,33 +33,7 @@ Think of this in three layers, moving from raw data to dashboard-ready metrics.
 * checks that high_price >= low_price
 
 
-
-### Layer 2: Intermediate
-Create `int_stock_quote_metrics.sql`. This add the "brains" to the data:
-* Extract `fetched_date` and `fetched_hour`.
-* Calculate `daily_price_range` (High minus Low).
-* Flag price movement (`up`, `down`, `flat`).
-* Add simple QA flags (e.g., `is_current_price_missing`).
-
-### Layer 3: Marts
-Build three simple models here:
-1. **`dim_stock_symbol`**: A dimension table built from a simple dbt seed (`stock_symbols.csv` file) containing stock symbols, company names, and sectors.
-2. **`fct_stock_quotes`**: Your main fact table, fed directly from your intermediate model. One row per quote snapshot. 
-3. **`fct_daily_stock_summary`**: An aggregated table showing the daily highs, lows, and averages per stock. 
-
-
-## 3. Execution Order
-
-Build exact sequence:
-
-1. **Run Staging:** `stg_stock_quotes` (Already working).
-2. **Build Intermediate:** `int_stock_quote_metrics` (Add your math and date logic here).
-3. **Seed Dimensions:** Create `stock_symbols.csv` and build `dim_stock_symbol`.
-4. **Build Facts:** `fct_stock_quotes`.
-5. **Build Aggregations:** `fct_daily_stock_summary`.
-
-
-## 4. Testing & Documentation Checklist
+## Testing & Documentation Checklist
 
 Add `schema.yml` files to ensure data quality:
 

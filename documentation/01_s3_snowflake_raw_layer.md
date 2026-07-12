@@ -1,7 +1,6 @@
 # S3 → Snowflake Raw Layer: Simple Demo Explanation 
-**Show S3 bucket: finnhub-stocks/raw/stock_quotes/**
 
-## ✅ Overview
+## ✅ Overview (**Show S3 bucket: finnhub-stocks/raw/stock_quotes/**)
 
 In this part of the project, the raw stock quote files are already stored in Amazon S3.
 
@@ -26,8 +25,7 @@ Amazon S3
 I use S3 as the raw storage layer. This means I keep the original JSONL files before transforming them. If something goes wrong later, I can always go back to the original raw files.
 
 
-## ✅ What Snowflake does in this step
-**2. Show Snowflake RAW table: 06_raw.sql**
+## ✅ What Snowflake does in this step (**2. Show Snowflake RAW table: 06_raw.sql**)
 
 Snowflake reads the files from S3 and loads them into a raw table.
 
@@ -251,9 +249,6 @@ This design keeps the pipeline organized. S3 stores the raw files, Snowflake loa
 
 
 In this step, the consumer has already saved raw Finnhub stock quote data into Amazon S3 as JSONL files. Snowflake connects to that S3 folder using a secure storage integration and an external stage. Then the COPY INTO command loads the JSONL records into the RAW_STOCK_QUOTES table. The RAW table keeps the original JSON record, the source file name, and the loaded timestamp. After this, dbt uses the raw table to build the staging, intermediate, and marts layers.
-
-
-
 
 
 
