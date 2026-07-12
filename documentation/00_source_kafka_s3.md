@@ -218,7 +218,7 @@ This structure is useful because it organizes raw data by ingestion date and hou
 
 ---
 
-## JSONL raw data format
+## ✅ JSONL raw data format
 
 The consumer saves data as JSONL. JSONL is useful for data pipelines because it is easier to process line by line.
 
