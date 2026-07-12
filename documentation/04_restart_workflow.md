@@ -154,7 +154,6 @@ Expected result:
 No data found
 ```
 
-What to say:
 
 > I check that Airflow can detect my DAG and that there are no import errors. This confirms that the DAG file is valid and ready to run.
 
@@ -629,7 +628,7 @@ No changes. Your infrastructure matches the configuration.
 
 What to say:
 
-> Terraform is used as the optional Infrastructure as Code layer. It defines the cloud infrastructure, including the S3 bucket, Snowflake database, warehouse, and schemas. The final Terraform plan shows no changes, which confirms that the real AWS and Snowflake infrastructure matches the Terraform configuration.
+> Terraform is used as the optional Infrastructure as Code layer. It defines the cloud infrastructure, including the S3 bucket, Snowflake database, warehouse, and schemas. The final Terraform plan shows no changes, which confirms that the AWS and Snowflake infrastructure matches the Terraform configuration.
 
 Terraform-managed resources:
 

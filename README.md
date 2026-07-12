@@ -10,6 +10,8 @@ Airflow orchestrates the workflow by running ingestion, triggering dbt transform
 ## Architecture
 
 ![Architecture](assets/architecture.png)
+![Kafka Producer & Consumer Flow](assets/producer_consumer_flow.png)
+
 
 ## 🛠️ Tools
 
@@ -70,6 +72,7 @@ Finnhub Free: 60 calls/min + free WebSocket, good data (watch pre-market volume)
 | dbt marts models | [`finnhub_stocks/models/marts/`](finnhub_stocks/models/marts/) |
 | dbt source/schema YAML files | [`finnhub_stocks/models/staging/sources.yml`](finnhub_stocks/models/staging/sources.yml), [`finnhub_stocks/models/staging/schema.yml`](finnhub_stocks/models/staging/schema.yml), [`finnhub_stocks/models/intermediate/schema.yml`](finnhub_stocks/models/intermediate/schema.yml), [`finnhub_stocks/models/marts/schema.yml`](finnhub_stocks/models/marts/schema.yml) |
 | dbt custom SQL tests | [`finnhub_stocks/tests/intermediate/`](finnhub_stocks/tests/intermediate/), [`finnhub_stocks/tests/marts/`](finnhub_stocks/tests/marts/) |
+| Terraform | [`terraform`](terraform), optional Infrastructure as Code layer. It defines the cloud infrastructure, including the S3 bucket, Snowflake database, warehouse, and schemas. |
 
 
 > Note: this repository uses a local `.env` file through Docker Compose, but no `.env.example` file is currently present in the repo. Do not commit real API keys, cloud credentials, or Snowflake passwords.
