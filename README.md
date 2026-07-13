@@ -1,10 +1,15 @@
 # Stock Market Finnhub
 
-This project is a small-scale modern data stack pipeline built with Finnhub stock quote data. The pipeline ingests stock quote data, stores the raw files in Amazon S3, loads the data into Snowflake, and transforms it with dbt into structured raw, staging, intermediate, and marts layers.
+This project is a small-scale modern data stack pipeline built with Finnhub stock quote data.
+The pipeline ingests stock quote data, send it into Kafka as streaming messages, consume those messages, and store them as raw JSONL files in Amazon S3.
 
-The final mart layer is designed as an analytics-ready star schema with dimension tables for stock symbols and dates, plus a daily fact table for stock quote metrics. 
+The raw files from Amazon S3 are loaded into Snowflake, and transforms it with dbt into structured raw, staging, intermediate, and marts layers.
 
-Airflow orchestrates the workflow by running ingestion, triggering dbt transformations, and executing dbt tests. The project also includes data quality checks such as not_null, unique, relationship tests, missing value checks, duplicate checks, and row count validation.
+The final mart layer is designed as an analytics-ready star schema with dimension tables for stock symbols and dates, plus a daily fact table for stock quote prices. 
+
+
+Airflow orchestrates the workflow by running ingestion, triggering dbt transformations, and executing dbt tests. 
+The project also includes data quality checks such as not_null, unique, relationship tests, missing value checks, duplicate checks, and row count validation.
 
 
 ## Architecture
@@ -47,6 +52,19 @@ Airflow orchestrates the workflow by running ingestion, triggering dbt transform
   </tr>
 </table>
 
+
+| Tool           |                                                               |
+| -------------- | ------------------------------------------------------------- |
+| Finnhub API    | Source of stock quote data                                    |
+| Kafka          | Streaming/message broker layer                                |
+| Kafdrop        | Browser UI for checking Kafka topics and messages             |
+| Amazon S3      | Raw storage layer                                             |
+| boto3          | Python library for uploading files to AWS S3                  |
+| Docker Compose | Runs Kafka, Zookeeper, Kafdrop, Airflow, and Postgres locally |
+| zookeeper         | Helps Kafka manage and coordinate its broker.                                           |
+| airflow-postgres  | Database where Airflow stores DAG runs, task status, and metadata.                      |
+| airflow-scheduler | Airflow service that decides when DAG tasks should run.                                 |
+| airflow-webserver | Airflow browser UI where you trigger and monitor DAG runs.                              |
 
 
 ## Dataset
