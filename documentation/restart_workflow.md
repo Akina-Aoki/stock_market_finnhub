@@ -1,10 +1,18 @@
 # Finnhub Modern Data Stack Demo Guide
 
-This guide is for restarting the project workflow and presenting the demo in a clear order.
+### 1. Prerequisites
+
+Make sure you have these installed and available from your terminal:
+
+- Docker Desktop or Docker Engine with Docker Compose
+- Python virtual environment for this project
+- Terraform CLI
+- dbt dependencies from `requirements.txt`
+- A local `.env` file in the project root
+
+The `.env` file is required because Docker Compose, Airflow, dbt, and the Python scripts read local credentials and connection settings from it. Keep it on your machine only. Do not commit `.env` to Git.
 
 ---
-
-## 1. What to say at the beginning
 
 This project is a small-scale modern data stack pipeline for Finnhub stock quote data.
 
@@ -21,7 +29,6 @@ The main tools are:
 | dbt | Builds staging, intermediate, and marts models, runs tests, and generates documentation |
 | Terraform | Defines and validates the cloud infrastructure setup for S3 and Snowflake |
 
-Short explanation:
 
 > Terraform prepares the cloud infrastructure, Docker runs the local services, Airflow controls the workflow, and dbt transforms and tests the data in Snowflake.
 

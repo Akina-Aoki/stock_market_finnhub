@@ -10,6 +10,8 @@ Airflow orchestrates the workflow by running ingestion, triggering dbt transform
 ## Architecture
 
 ![Architecture](assets/architecture.png)
+
+## Ingestion Flow with Kafka
 ![Kafka Producer & Consumer Flow](assets/producer_consumer_flow.png)
 
 
@@ -53,6 +55,9 @@ Airflow orchestrates the workflow by running ingestion, triggering dbt transform
 **Finnhub Review** offers a deep dive into a compelling financial data platform designed for developers, investors, academics, and fintech innovators. As a modern, RESTful and WebSocket-enabled API, Finnhub delivers real-time and historical financial market data, alternative data sets, and comprehensive company fundamentals. 
 
 Finnhub Free: 60 calls/min + free WebSocket, good data (watch pre-market volume), best for real-time
+
+## Setup Instructions
+[`Setup Instructions`](documentation/restart_workflow.md)
 
 
 ## Repository map
