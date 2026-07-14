@@ -1,4 +1,4 @@
-## Terraform Infrastructure as Code (Show terraform_plan image)
+## ✅  Terraform Infrastructure as Code (Show terraform_plan image)
 
 Terraform was added as an optional Infrastructure as Code layer for this project.
 

@@ -77,6 +77,7 @@ Finnhub Free: 60 calls/min + free WebSocket, good data (watch pre-market volume)
 ## Setup Instructions
 [`Setup Instructions`](documentation/restart_workflow.md)
 
+---
 
 ## Repository map
 

@@ -2,8 +2,6 @@
 
 ## ✅ Overview
 
-This phase is to collect stock quote data from the Finnhub API, send it into Kafka as streaming messages, consume those messages, and store them as raw JSONL files in Amazon S3.
-
 
 ### ✅ Producer flow
 
@@ -56,9 +54,9 @@ The topic was created with:
 Partitions: 3
 ```
 
-Because it has 3 partitions, this means Kafka stored each stock quote message inside a partition.
+Because it has 3 partitions, this means Kafka stored each stock quote message inside a partition automatically. 
 
-Kafka chooses the partition automatically. 
+
 Later, a possible improvement is to use the stock symbol as the message key so all messages for the same company go to the same partition.
 
 

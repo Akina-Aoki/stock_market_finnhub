@@ -1,5 +1,4 @@
-# Airflow Orchestration (Show dag_flow chart in README)
-> I used Airflow to orchestrate the full pipeline. Each DAG run creates a unique run_id, runs a one-shot producer to fetch 5 Finnhub stock quotes, sends them to Kafka, runs a one-shot consumer to upload the batch to S3, loads the JSONL file into Snowflake RAW, checks the raw batch quality, runs dbt transformations, runs dbt tests, and finally validates that the mart fact table has rows for the current batch. This proves the pipeline works end-to-end from API ingestion to analytics-ready tables.
+# ✅ Airflow Orchestration (Show dag_flow chart in README)
 ### The Airflow workflow is:
 
 ```text
@@ -46,15 +45,7 @@ Its job is to:
 4. Exit
 ```
 
-The stock symbols are:
 
-```text
-AAPL
-MSFT
-TSLA
-GOOGL
-AMZN
-```
 
 ## ✅* Consumer task
 
@@ -80,6 +71,9 @@ Its job is to:
 
 Airflow runs inside Docker, so it needs access to the project files and dependencies.
 
+
+> Since Airflow runs inside Docker, I had to make sure the Airflow container had the right folders, Python packages, environment variables, and dbt profile.
+
 Important mounted folders:
 
 ```text
@@ -101,7 +95,7 @@ python-dotenv
 requests
 ```
 
-> Since Airflow runs inside Docker, I had to make sure the Airflow container had the right folders, Python packages, environment variables, and dbt profile.
+
 
 ---
 

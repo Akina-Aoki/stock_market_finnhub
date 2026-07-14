@@ -1,6 +1,6 @@
-# dbt Architecture
+# ✅ dbt Architecture
 
-Think of this in three layers, moving from raw data to dashboard-ready metrics.
+Moving from raw data to Staging schema.
 
 | dbt Layer | Prefix | Purpose | Example Model |
 |---|---|---|---|
@@ -9,7 +9,7 @@ Think of this in three layers, moving from raw data to dashboard-ready metrics.
 | **Marts** | `dim_`, `fct_` | **Analyze:** Final tables for dashboards and reporting. | `fct_stock_quotes` |
 
 
-## Pipeline
+## ✅ Pipeline (dbt docs stg_stock_quotes)
 
 ### Layer 1: Staging
 `stg_stock_quotes.sql`
@@ -22,7 +22,7 @@ Think of this in three layers, moving from raw data to dashboard-ready metrics.
 `finnhub_stocks/models/staging/schema.yml`
 * dbt tests and documentation 
 
-`schema.yml` 
+`schema.yml` (show Data Tests in dbt docs)
 * documents the model and columns
 * runs 12 not_null tests
 
@@ -42,4 +42,22 @@ Add `schema.yml` files to ensure data quality:
   * Enforce `unique` on your dimension symbols. 
   * Ensure a relationship test exists linking your fact tables to your dimension table.
 
-* **Docs:** Add a 1-2 sentence description for every model and critical column so your dbt docs generate cleanly.
+
+## ✅ Show Table (Snowflake 07_staging.sql)
+
+
+
+| Column | Description | Source / Calculation |
+|---|---|---|
+| `symbol` | The stock ticker, like `AAPL`, `MSFT`, or `TSLA`. | From staging. |
+| `current_price` | The current stock price from Finnhub. | From staging. |
+| `price_change` | How much the price changed compared to the previous close. This can be positive or negative. | From staging. |
+| `price_change_percent` | The same price movement, but shown as a percentage. This can also be positive or negative. | From staging. |
+| `high_price` | The highest price of the stock during the trading day. | From staging. |
+| `low_price` | The lowest price of the stock during the trading day. | From staging. |
+| `open_price` | The price when the trading day opened. | From staging. |
+| `previous_close_price` | The closing price from the previous trading day. | From staging. |
+| `finnhub_timestamp` | The timestamp that came from Finnhub. | From staging. |
+| `fetched_at` | When our Python producer fetched the quote from the API. | From staging. |
+| `source_file_name` | The S3 file where the row originally came from. | From staging. |
+| `loaded_at` | When the row was loaded into Snowflake. | From staging. |

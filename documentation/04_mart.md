@@ -1,12 +1,15 @@
-## Layer 3: Marts (⭐Show Data Model)
-The goal of the mart layer is to create clean, analytics-ready tables. This is similar to the Gold layer in the Databricks project. The staging and intermediate layers can still keep technical details, but the mart layer should be easier to use for analysis, dashboards, and explanation.
+## ✅  Layer 3: Marts (⭐Show Data Model)
+The goal of the mart layer is to create clean, analytics-ready tables. This is similar to the Gold layer in the Databricks. 
 
-**Because the mart layer is final and analytics-ready, these models should be materialized as tables.**
+
+The staging and intermediate layers can still keep technical details, but the mart layer should be easier to use for analysis, dashboards, and explanation.
+
+These models should be materialized as tables.
 
 
 ---
 
-### Build three simple models here: ⭐ Star Schema
+### ✅  Build three simple models here: ⭐ Star Schema 
 
 1. **`dim_stock_symbol`**: A dimension table containing stock symbols.
 
@@ -70,7 +73,7 @@ This dimension will be created from `fetched_date` in the intermediate model.
 
 ---
 
-### `fct_stock_quotes_daily`
+### ✅  `fct_stock_quotes_daily`
 
 One row per stock symbol per fetched date.
 
@@ -93,7 +96,7 @@ One row per stock symbol per fetched date.
 
 ---
 
-## Columns we will not include in the mart fact table
+## ✅  Columns we will not include in the mart fact table
 
 These columns are useful for debugging and lineage, but they are not needed in the main analytics-ready mart.
 
@@ -116,20 +119,17 @@ This is a conscious trade-off.
 
 ### Pros
 
-- Easier to read in Snowflake and dashboards
+- Easier to read in dashboards. Better for presentation and final reporting
 - Similar to how stock prices are normally displayed
-- Better for presentation and final reporting
-- Makes the final mart less messy
 
 ### Cons
 
-- Slight loss of precision
-- Not ideal for advanced financial calculations
-- If we need exact values later, we should use intermediate or raw precise columns
+- Slight loss of precision, Not ideal for advanced financial calculations
 
 
 
-## Tests needed for the mart layer
+
+## ✅ Tests needed for the mart layer
 
 ### `dim_stock_symbol`
 
@@ -161,7 +161,7 @@ This is a conscious trade-off.
 | `current_price` | `not_null` |
 | `price_movement_direction` | `not_null`, accepted values: `up`, `down`, `unchanged` |
 
-### Extra custom tests for `fct_stock_quotes_daily`
+### ✅ Extra custom tests for `fct_stock_quotes_daily`
 
 In addition to the standard dbt tests, we added custom SQL tests for business rules and grain validation.
 

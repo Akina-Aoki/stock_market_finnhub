@@ -1,6 +1,6 @@
 # S3 → Snowflake Raw Layer
 
-## ✅ Overview (**Show S3 bucket: finnhub-stocks/raw/stock_quotes/**)
+## ✅ Overview (**01_create_raw_table Snowflake**)
 
 So, the raw stock quote files are already stored in Amazon S3.
 
@@ -35,9 +35,18 @@ MARTS
 ```
 
 
+## ✅ How I validate that the load worked  (still in 06_raw.sql)
+
+I validate the load in three ways:
+
+1. Check that Snowflake can list the files in the S3 stage
+2. Check that rows were loaded into the raw table
+3. Check that JSON fields can be extracted from `RAW_RECORD`
+
+
+
 ## ✅ What Snowflake does in this step (2. Show Snowflake RAW table: 06_raw.sql)
 
-Snowflake reads the files from S3 and loads them into a raw table.
 
 The raw table is:
 
@@ -47,30 +56,12 @@ FINNHUB_STOCKS_MDS.RAW.RAW_STOCK_QUOTES
 
 This table stores:
 
-| Column | Simple meaning |
+| Column | Function |
 |---|---|
-| `RAW_RECORD` | The full original JSONL object |
+| `RAW_RECORD` | The full original JSONL object. Stores original records from S3 and  keeps the original data mostly unchanged |
 | `SOURCE_FILE_NAME` | The S3 file path where the row came from |
 | `LOADED_AT` | The time when Snowflake loaded the row. Can trace where each row came from. |
 
-
-
-| Layer | Purpose |
-|---|---|
-| RAW | Stores original JSON records from S3 and  keeps the original data mostly unchanged |
-| STAGING | Extracts and cleans JSON fields into normal columns such as symbol, current price, high price, low price, and fetched timestamp. |
-| INTERMEDIATE | Adds calculated metrics and business logic |
-| MARTS | Creates analytics-ready fact and dimension tables |
-
-
-
-## ✅ How I validate that the load worked  (still in 06_raw.sql)
-
-I validate the load in three ways:
-
-1. Check that Snowflake can list the files in the S3 stage
-2. Check that rows were loaded into the raw table
-3. Check that JSON fields can be extracted from `RAW_RECORD`
 
 
 ## Then move to dbt staging:
